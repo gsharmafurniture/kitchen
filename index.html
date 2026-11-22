@@ -45,7 +45,7 @@ Object.assign(sun.shadow.camera,{left:-4,right:4,top:4,bottom:-4,near:.5,far:14}
 const pl=new THREE.PointLight(0xffefd0,.45,8);pl.position.set(1.6,2.5,1.6);scene.add(pl);
 
 const fixed=new THREE.Group(),walls=new THREE.Group(),uppers=new THREE.Group();scene.add(fixed,walls,uppers);
-const mc={};const M=(c,o={})=>{const k=c+JSON.stringify(o);return mc[k]||(mc[k]=new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6,metalness:0},o)))};
+const mc={};const M=(c,o={},variant='')=>{const k=variant+c+JSON.stringify(o);return mc[k]||(mc[k]=new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6,metalness:0},o)))};
 function box(w,h,d,c,x,y,z,p,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m||M(c));o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;(p||fixed).add(o);return o}
 function cyl(rt,rb,h,c,x,y,z,p,m){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,28),m||M(c));o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;(p||fixed).add(o);return o}
 function tex(w,h,draw,rx,ry){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);
@@ -53,9 +53,8 @@ function tex(w,h,draw,rx,ry){const c=document.createElement('canvas');c.width=w;
 const subway=(rx,ry)=>tex(256,256,(g,w,h)=>{g.fillStyle='#f7f6f2';g.fillRect(0,0,w,h);g.strokeStyle='#d6d3cb';g.lineWidth=3;
  for(let r=0;r<4;r++){const y=r*64,o=r%2?64:0;g.strokeRect(o-128,y,128,64);g.strokeRect(o,y,128,64);g.strokeRect(o+128,y,128,64)}},rx,ry);
 
-const BASE=0x46544f,UP=0xece8df,BRASS=0xb8924a,W=3.4;
+const BASE=0x46544f,UP=0x46544f,W=3.4;
 const metalM=()=>M(0xc9cdd1,{metalness:.7,roughness:.3});
-const brassM=()=>M(BRASS,{metalness:.8,roughness:.3});
 
 // floor
 const fl=new THREE.Mesh(new THREE.PlaneGeometry(W,W),new THREE.MeshStandardMaterial({
@@ -84,26 +83,27 @@ wall(2.3,.55,1.15,1.175,.004,0,bs(2.3,.55));wall(2.6,.55,.004,1.175,1.3,Math.PI/
 // modular run builder: local x along run, z out from wall
 const doorGroups=[],labels=new THREE.Group();scene.add(labels);labels.visible=false;
 const PART=0x6b7d76;
-const grp={base:[],up:[],top:[],part:[],handle:[],wall:[wm]};
-grp.top.push(M(0xefece5,{roughness:.22,metalness:.05}));grp.part.push(M(PART));grp.handle.push(brassM());
+const grp={base:[],up:[],top:[],part:[],wall:[wm]};
+grp.top.push(M(0xefece5,{roughness:.22,metalness:.05}));grp.part.push(M(PART));
 function run(o,rot,mods,len,up,topLen,topOff=0,openStart=0,openEnd=0){
  const g=new THREE.Group();g.position.set(...o);g.rotation.y=rot;(up?uppers:fixed).add(g);
  const col=up?UP:BASE,y0=up?1.45:.1,H=up?.7:.74,D=up?.35:.56;let x=0;
- (up?grp.up:grp.base).push(M(col),M(col,{roughness:.45}));
+ const cm=M(col,{},up?'upper':'base'),fm=M(col,{roughness:.45},up?'upper':'base');
+ (up?grp.up:grp.base).push(cm,fm);
  const dg=new THREE.Group();g.add(dg);if(!up)doorGroups.push(dg);const T=up?g:dg;
  const dv=xx=>box(.03,H,D,PART,xx,y0+H/2,D/2,g);
  if(!up){box(len,.1,.5,0x1d1f21,len/2,.05,.28,g);
   box(topLen,.04,.62,0xefece5,topOff+topLen/2,.88,.31,g,M(0xefece5,{roughness:.22,metalness:.05}));
-  box(len,H,.01,col,len/2,y0+H/2,.005,g);box(len,.02,D,col,len/2,y0+.01,D/2,g);
+  box(len,H,.01,col,len/2,y0+H/2,.005,g,cm);box(len,.02,D,col,len/2,y0+.01,D/2,g,cm);
   if(!openStart)dv(.015)}
  mods.forEach((m,i)=>{const cx=x+m.w/2;
   if(!m.gap){
-   if(up)box(m.w-.006,H,D,col,cx,y0+H/2,D/2,g);
-   const fz=D+.01,fm=M(col,{roughness:.45});
+   if(up)box(m.w-.006,H,D,col,cx,y0+H/2,D/2,g,cm);
+   const fz=D+.01;
    const X=up?.025:0; // wall-cabinet doors hang 1 inch lower; base doors stay flush; handleless
-   if(m.t==='drawers'){for(let k=0;k<3;k++){const y=y0+.118+k*.248,e=k===0?X:0;box(m.w-.014,.232+e,.02,col,cx,y-e/2,fz,T,fm);if(!up)box(.3,.012,.022,BRASS,cx,y+.07,fz+.02,T,brassM())}}
+   if(m.t==='drawers'){for(let k=0;k<3;k++){const y=y0+.118+k*.248,e=k===0?X:0;box(m.w-.014,.232+e,.02,col,cx,y-e/2,fz,T,fm)}}
    else{box(m.w-.014,H-.012+X,.02,col,cx,y0+H/2-X/2,fz,T,fm);
-     if(!up)box(.012,.26,.022,BRASS,cx+m.w/2-.06,y0+H-.22,fz+.02,T,brassM())}
+   }
   }
   x+=m.w;
   if(!up&&!(i===mods.length-1&&openEnd))dv(x-.015)});
@@ -159,9 +159,8 @@ cyl(.07,.055,.13,0xf3f1ea,.3,.975,2.35);const pl2=new THREE.Mesh(new THREE.Spher
 
 const PAL={
  base:['Base cabinets',[0x46544f,0x2f3e5c,0x2b2b2d,0x8aa08a,0x7a5236,0xf1efea]],
- up:['Wall cabinets',[0xece8df,0xffffff,0xcfd3d4,0x9db3a0,0xd9c7a9,0x2f3e5c]],
+ up:['Wall cabinets',[0x46544f,0xece8df,0xffffff,0xcfd3d4,0x9db3a0,0xd9c7a9,0x2f3e5c]],
  top:['Countertop',[0xefece5,0x1a1a1d,0x8c8f93,0xd8c9b0,0x3a5a4a,0x6b4a35]],
- handle:['Handles',[0xb8924a,0x1c1c1c,0xc4c8cc,0xb87333]],
  wall:['Wall paint',[0xf4f2ed,0xdfe3e4,0xe6d9c3,0xcfdccf,0xc9d3e0]]};
 const cp=document.getElementById('cp'),hx=h=>'#'+h.toString(16).padStart(6,'0');
 function applyCol(k,h){grp[k].forEach(m=>m.color.set(h));if(k==='base'){const c=new THREE.Color(h).lerp(new THREE.Color(0xffffff),.12);grp.part.forEach(m=>m.color.copy(c))}}
