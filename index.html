@@ -127,7 +127,7 @@ box(.44,.006,.54,0xc9cdd1,2.0,.903,.3,fixed,metalM());box(.36,.008,.46,0x8d9296,
 cyl(.012,.012,.24,0,2.0,1.02,.06,fixed,metalM());box(.014,.014,.12,0xc9cdd1,2.0,1.14,.12,fixed,metalM());
 // upper cabinets + chimney over hob
 run([0,0,2.6],Math.PI/2,[{w:.6,t:'door'},{w:.7,t:'door'},{w:.7,gap:1},{w:.6,t:'door'}],2.6,1);
-run([.6,0,0],0,[{w:.7,t:'door'}],.7,1);
+run([.6,0,0],0,[{w:.7,t:'door'},{w:.7,t:'door'},{w:.3,t:'door'}],1.7,1);
 box(.46,.07,.62,0x2b2e31,.23,1.55,.95,fixed,metalM());box(.2,1.1,.24,0x2b2e31,.1,2.15,.95,fixed,metalM());
 const LM=new THREE.MeshBasicMaterial({color:0xfff1c9});
 box(.04,.01,1.3,0xfff1c9,.2,1.445,1.95,uppers,LM);box(.04,.01,.6,0xfff1c9,.2,1.445,.3,uppers,LM);box(.7,.01,.04,0xfff1c9,.95,1.445,.2,uppers,LM);
@@ -142,9 +142,6 @@ box(.025,.5,.02,0xdcdfe2,2.53,1.2,.71,fixed,metalM());box(.025,.3,.02,0xdcdfe2,2
 // stepped "stair" wall corner: wall -> 5in -> opposite fold -> 3in -> wall
 {const bw=.127,bd=.076,blk=new THREE.Mesh(new THREE.BoxGeometry(bw,2.7,bd),wm);blk.position.set(bw/2,1.35,bd/2);blk.receiveShadow=true;walls.add(blk);
  wall(bw,.55,bw/2,1.175,bd+.004,0,bs(bw,.55));wall(bd,.55,bw+.004,1.175,bd/2,Math.PI/2,bs(bd,.55))}
-// geyser above sink
-box(.3,.42,.24,0xf7f7f7,2.0,1.95,.12,fixed,M(0xf7f7f7,{roughness:.3}));
-cyl(.012,.012,.3,0,1.94,1.6,.05,fixed,metalM());cyl(.012,.012,.3,0,2.06,1.6,.05,fixed,metalM());
 // switch boards: s=switch, o=socket
 function board(x,y,z,rot,pat){const g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=rot;walls.add(g);
  const n=pat.length,w=n*.06+.03;box(w,.1,.012,0xffffff,0,0,.006,g,M(0xf8f8f8,{roughness:.3}));
@@ -154,8 +151,25 @@ function board(x,y,z,rot,pat){const g=new THREE.Group();g.position.set(x,y,z);g.
 const SW=Math.PI/2;
 board(.01,1.15,.45,SW,'so');      // stove wall, near corner
 board(1.0,1.15,.01,0,'sso');      // sink wall, beside dish rack
-// plant at far end of stove wall
-cyl(.07,.055,.13,0xf3f1ea,.3,.975,2.35);const pl2=new THREE.Mesh(new THREE.SphereGeometry(.1,16,12),M(0x4c8a4f));pl2.position.set(.3,1.1,2.35);pl2.scale.y=1.2;pl2.castShadow=true;fixed.add(pl2);
+// tall pantry and rolling shutter on the left side
+{const pantry=new THREE.Group();pantry.position.set(.34,0,3.05);pantry.rotation.y=Math.PI/2;fixed.add(pantry);
+ const parts=new THREE.Group();parts.position.set(-.34,0,-2.38);pantry.add(parts);
+ box(.66,2.05,.68,0x46544f,.34,1.025,2.38,parts, M(0x46544f,{roughness:.48}));
+ box(.58,.025,.60,0x313b38,.34,2.06,2.38,parts, M(0x313b38,{roughness:.35,metalness:.12}));
+ box(.58,.08,.025,0xc8c9c3,.34,2.065,2.71,parts, M(0xc8c9c3,{roughness:.28,metalness:.35}));
+ for(let y=.9;y<2.02;y+=.09){
+  box(.58,.052,.028,0x718079,.34,y,2.71,parts,M(0x718079,{roughness:.38,metalness:.12}));
+ }
+ box(.018,.38,.025,0xdde0dc,.63,1.02,2.73,parts,metalM());
+ box(.58,.018,.64,0x313b38,.34,2.10,2.38,parts,M(0x313b38,{roughness:.35,metalness:.12}));
+ const wicker=M(0xb58a5b,{roughness:.9}),weave=M(0x9b7148,{roughness:.9});
+ [.29,.63].forEach(y=>{
+  box(.56,.29,.035,0x9b7148,.34,y,2.72,parts,weave);
+  for(let i=0;i<5;i++)box(.025,.27,.012,0xb58a5b,.09+i*.125,y,2.744,parts,wicker);
+  for(let i=0;i<4;i++)box(.55,.025,.012,0xc39a68,.34,y-.105+i*.07,2.746,parts,M(0xc39a68,{roughness:.9}));
+  box(.09,.025,.012,0x554634,.34,y+.09,2.751,parts,M(0x554634,{roughness:.7}));
+ });
+}
 
 const PAL={
  base:['Base cabinets',[0x46544f,0x2f3e5c,0x2b2b2d,0x8aa08a,0x7a5236,0xf1efea]],
